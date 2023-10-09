@@ -1,0 +1,101 @@
+@import url('https://fonts.googleapis.com/css2?family=Arvo:ital,wght@0,400;0,700;1,400;1,700&family=Inclusive+Sans&family=Mooli&family=Roboto:wght@300;400;700&display=swap');
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-width: 100vw;
+    margin: 0;
+    overflow: hidden;
+    background-color: black;
+
+    font-family: 'Inclusive Sans', sans-serif;
+    color: #272d2d;
+    font-size: 32px;
+
+}
+
+/* Titles */
+h1 {
+    font-weight: 700;
+    font-size: 2em;
+    margin: 0.5em -0.5em;
+}
+
+h2 {
+    font-weight: 400;
+    font-size: 1.5em;
+    margin: 0.5em 0;
+}
+
+h3 {
+    font-weight: 400;
+    font-size: 1.2em;
+    margin: 0.5em 0;
+}
+
+h4, h5, h6 {
+    font-weight: 400;
+    font-size: 1em;
+    margin: 0.5em 0;
+}
+
+/* Regular slide */
+
+section {
+    background-color: #f5f5f5;
+    margin: 2.5vh auto;
+    scroll-margin-top: 2.5vh; /* same as margin-top */
+    height: calc(100vh - 5vh);
+    /* 4/3 layout */
+    width: calc((100vh - 5vh) * 4 / 3);
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: column;
+    padding: 2.5% 5%;
+}
+
+section img {
+    align-self: center;
+}
+
+/* Misc */
+
+ul.todo {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+ul.todo li {
+    margin: 0.5em 0;
+}
+
+ul.todo li:before {
+    content: "□";
+    margin-right: 0.5em;
+}
+
+ul.todo li.done:before {
+    content: "■";
+}
+
+/* Title slide */
+
+section.title {
+    padding: 5%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+section.title h1 {
+    font-size: 2em;
+    text-align: center;
+    margin: 0.5em 0;
+}
+
+section.title .authors {
+    text-align: center;
+}
