@@ -1,8 +1,31 @@
+// hot reload
+const ws = new WebSocket(`ws://${window.location.host}/ws`)
+ws.addEventListener('message', (event) => {
+    if (event.data === 'reload') {
+        // save state in local storage
+        const state = {
+            currentSlide,
+        }
+        localStorage.setItem('state', JSON.stringify(state))
+
+        window.location.reload()
+    }
+})
+
 //const domToSvg = await import('https://cdn.skypack.dev/dom-to-svg')
 //const pdfkit = await import('https://unpkg.com/pdfkit@0.13/js/pdfkit.standalone.js')
 
+
 const slides = [...document.querySelectorAll('section')]
 let currentSlide = 0
+
+// load state from local storage
+const stateStr = localStorage.getItem('state')
+if (stateStr) {
+    const state = JSON.parse(stateStr)
+    currentSlide = state.currentSlide 
+    focusSlide(currentSlide)
+}
 
 const nextSlide = () => {
     if (currentSlide < slides.length - 1) {
