@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
@@ -24,9 +24,78 @@
             src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
             integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05"
             crossorigin="anonymous"
-            onload="renderMathInElement(document.body);"
         ></script>
-            
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                renderMathInElement(document.body, {
+                    // customised options
+                    // • auto-render specific keys, e.g.:
+                    delimiters: [
+                        { left: '$$', right: '$$', display: true },
+                        { left: '$', right: '$', display: false },
+                        { left: '\\(', right: '\\)', display: false },
+                        { left: '\\[', right: '\\]', display: true },
+                    ],
+                    // • rendering keys, e.g.:
+                    throwOnError: false,
+                })
+            })
+        </script>
+
+        <!-- Morph DOM -->
+        <script src="https://cdn.jsdelivr.net/npm/morphdom@2.6.1/dist/morphdom-umd.min.js"></script>
+
+        <!-- Custom Elements -->
+        <script>
+            // slide custom element
+            class Slide extends HTMLElement {
+                constructor() {
+                    super()
+                    this.steps = []
+
+                    this._currentStep = 0
+
+                    document.addEventListener(
+                        'DOMContentLoaded',
+                        () => {
+                            this.initial = this.outerHTML
+                        },
+                        0
+                    )
+                }
+
+                set currentStep(value) {
+                    this._currentStep = value
+                }
+
+                get currentStep() {
+                    return this._currentStep
+                }
+
+                addStep(stepCallback) {
+                    console.log('addStep')
+                    this.steps.push(stepCallback)
+                }
+
+                nextStep() {
+                    if (this.currentStep < this.steps.length) {
+                        // apply next
+                        this.currentStep++
+                        this.steps[this.currentStep - 1]()
+                    }
+                }
+
+                hasNextStep() {
+                    return this.currentStep < this.steps.length
+                }
+
+                reset() {
+                    morphdom(this, this.initial)
+                    this.currentStep = 0
+                }
+            }
+            window.customElements.define('presentation-slide', Slide)
+        </script>
 
         <link rel="stylesheet" href="style.css" />
     </head>

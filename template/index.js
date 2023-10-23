@@ -14,20 +14,38 @@ ws.addEventListener('message', (event) => {
 
 //const domToSvg = await import('https://cdn.skypack.dev/dom-to-svg')
 //const pdfkit = await import('https://unpkg.com/pdfkit@0.13/js/pdfkit.standalone.js')
-
-
-const slides = [...document.querySelectorAll('section')]
+const slides = [...document.querySelectorAll('presentation-slide')]
 let currentSlide = 0
 
+// slide state
+
 // load state from local storage
+const saveState = () => {
+    const state = {
+        currentSlide, 
+        currentSlideStep: slides[currentSlide].currentStep,
+    }
+
+    localStorage.setItem('state', JSON.stringify(state)) 
+}
+
 const stateStr = localStorage.getItem('state')
 if (stateStr) {
     const state = JSON.parse(stateStr)
     currentSlide = state.currentSlide 
+    currentSlide = Math.min(currentSlide, slides.length - 1)
+
     focusSlide(currentSlide)
 }
 
+
+// presentation driver
 const nextSlide = () => {
+    if (slides[currentSlide].hasNextStep()) {
+        slides[currentSlide].nextStep()
+        return 
+    }
+
     if (currentSlide < slides.length - 1) {
         focusSlide(currentSlide + 1)
     }
@@ -36,12 +54,11 @@ const nextSlide = () => {
 const prevSlide = () => {
     if (currentSlide > 0) {
         focusSlide(currentSlide - 1)
+        slides[currentSlide].reset()
     }
 }
 
 function focusSlide(index) {
-    console.log('focusSlide', index)
-
     // scroll to slide
     slides[index].scrollIntoView({
         block: 'start',
@@ -49,6 +66,9 @@ function focusSlide(index) {
     })
 
     currentSlide = index
+
+    // save state in local storage
+    saveState()
 }
 
 // setup arrow navigation

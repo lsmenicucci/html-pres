@@ -35,6 +35,7 @@ fs.watch(inputParent, (event, filename) => {
 const hereDir = path.dirname(import.meta.url).replace('file://', '')
 const templateDir = path.join(hereDir, 'template')
 const staticFiles = {
+    '/comps.js': path.join(templateDir, 'comps.js'),
     '/index.js': path.join(templateDir, 'index.js'),
     '/style.css': path.join(templateDir, 'style.css'),
 }
@@ -54,6 +55,7 @@ const applyTemplate = () => {
 }
 
 // start server
+console.log('starting server at http://localhost:3000')
 serve({
     fetch: (req, server) => {
         const pathname = new URL(req.url).pathname
