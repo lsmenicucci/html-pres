@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="viewport" content="width=device-width" />
         <meta http-equiv="X-UA-Compatible" content="ie=edge" />
         <title>Presentation</title>
 
@@ -138,19 +138,23 @@
 
                     let scale = 1
 
-                    if (window.innerWidth * (3 / 4) >= window.innerHeight) {
-                        const h = window.innerHeight * (1 - DEFAULT_VH_MARGIN * 2)
+                    let vw = Math.min(document.documentElement.clientWidth, screen.availWidth)
+                    let vh = Math.min(document.documentElement.clientHeight, screen.availHeight)
+                    console.log(vw, vh)
+
+                    if (vw * (3 / 4) >= vh) {
+                        const h = vh * (1 - DEFAULT_VH_MARGIN * 2)
                         const w = h * (4 / 3)
-                        const my = DEFAULT_VH_MARGIN * window.innerHeight
-                        const mx = (window.innerWidth - w) / 2
+                        const my = DEFAULT_VH_MARGIN * vh
+                        const mx = (vw - w) / 2
 
                         this.style.margin = `${my}px ${mx}px`
                         scale = h / ORIGINAL_HEIGHT
                     }else{
-                        const w = window.innerWidth * (1 - DEFAULT_VH_MARGIN * 2)
+                        const w = vw * (1 - DEFAULT_VH_MARGIN * 2)
                         const h = w * (3 / 4)
-                        const mx = DEFAULT_VH_MARGIN * window.innerWidth
-                        const my = (window.innerHeight - h) / 2
+                        const mx = DEFAULT_VH_MARGIN * vw
+                        const my = (vh - h) / 2
 
                         this.style.margin = `${my}px ${mx}px`
                         scale = h / ORIGINAL_HEIGHT
