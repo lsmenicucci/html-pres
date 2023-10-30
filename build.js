@@ -1,11 +1,23 @@
+#!/usr/bin/env bun
 import path from 'path'
 import fs from 'fs'
 import { build } from 'vite'
 import { viteSingleFile } from 'vite-plugin-singlefile'
 import { JSDOM } from 'jsdom'
 import crypto from 'crypto'
+import css from 'css'
+import { exit } from 'process'
+import { program } from 'commander'
 
-const input = process.argv[2]
+program
+    .argument('<input>', 'input file')
+    .option('--offline', 'offline mode')
+
+program.parse(process.argv)
+const opts = program.opts()
+const args = program.args
+
+const input = args[0]
 const inputParent = path.dirname(input)
 
 const hereDir = path.dirname(import.meta.url).replace('file://', '')
@@ -50,40 +62,70 @@ const html = applyTemplate()
 const dom = new JSDOM(html)
 const scripts = dom.window.document.querySelectorAll('script')
 const links = dom.window.document.querySelectorAll('link')
-const deps = [...scripts, ...links].reduce((acc, el) => {
-    const attr = el.tagName === 'SCRIPT' ? 'src' : 'href'
-    const value = el.getAttribute(attr)
+let deps = {}
 
-    if (value && isExternal(value)) {
-        acc[value] = toLocal(value)
+if (opts.offline) {
+    deps = [...scripts, ...links].reduce((acc, el) => {
+        const attr = el.tagName === 'SCRIPT' ? 'src' : 'href'
+        const value = el.getAttribute(attr)
 
-        let newUrl = acc[value]
-        if (!el.hasAttribute('module')) {
-            newUrl = path.relative(distDir, acc[value])
+        if (value && isExternal(value)) {
+            acc[value] = toLocal(value)
+
+            let newUrl = acc[value]
+            if (!el.hasAttribute('module')) {
+                newUrl = path.relative(distDir, acc[value])
+            }
+
+            el.setAttribute(attr, newUrl)
+            el.removeAttribute('integrity')
+            el.removeAttribute('crossorigin')
         }
+        return acc
+    }, {})
 
-        el.setAttribute(attr, newUrl)
-        el.removeAttribute('integrity')
-        el.removeAttribute('crossorigin')
+    const cssUrlRe = /url\((.+?)\)/g
+    const resolveCssFonts = async (cssStr) => {
+        const cssAst = css.parse(cssStr)
+        // find imports 
+        const imports = cssAst.stylesheet.rules.filter(r => r.type === 'import')
+
+        // find fonts
+        const fonts = cssAst.stylesheet.rules.filter(r => r.type === 'font-face')
+        const fontSrcValues = fonts.map(f => f.declarations.find(d => d.property === 'src').value)
+
+        const deps = {}
+        fontSrcValues.forEach(src => {
+            src.replace(cssUrlRe, (match, url) => {
+                const local = toLocal(url)
+                deps[url] = local 
+                return match.replace(url, local)
+            })
+        })
     }
-    return acc
-}, {})
+        
 
-// fetch external dependencies
-if (!fs.existsSync(vendorDir)) {
-    fs.mkdirSync(vendorDir)
+    // fetch external dependencies
+    if (!fs.existsSync(vendorDir)) {
+        fs.mkdirSync(vendorDir)
+    }
+    const fetches = Object.entries(deps).map(async ([url, local]) => {
+        console.log(`fetching ${url}`)
+
+        const resp = await fetch(url)
+        if (resp.ok) {
+            const text = await resp.text()
+            
+            if (path.extname(url) === '.css') {
+                await resolveCssFonts(text)
+            }
+
+            fs.writeFileSync(local, text)
+            console.log(`fetched ${url} => ${local}`)
+        }
+    })
+    await Promise.all(fetches)
 }
-const fetches = Object.entries(deps).map(async ([url, local]) => {
-    console.log(`fetching ${url}`)
-
-    const resp = await fetch(url)
-    if (resp.ok) {
-        const text = await resp.text()
-        fs.writeFileSync(local, text)
-        console.log(`fetched ${url} => ${local}`)
-    }
-})
-await Promise.all(fetches)
 
 // write index.html
 const indexFile = path.join(distDir, 'index.html')

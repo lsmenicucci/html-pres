@@ -42,11 +42,26 @@
             })
         </script>
 
+        <!-- Highlight.js -->
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css"
+        />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+        <script>
+            hljs.highlightAll()
+        </script>
+
         <!-- Morph DOM -->
         <script src="https://cdn.jsdelivr.net/npm/morphdom@2.6.1/dist/morphdom-umd.min.js"></script>
 
         <!-- Custom Elements -->
         <script>
+            // resizing
+            const DEFAULT_VH_MARGIN = 0.025
+            let ORIGINAL_WIDTH = 1920
+            let ORIGINAL_HEIGHT = 900
+
             // slide custom element
             class Slide extends HTMLElement {
                 constructor() {
@@ -54,14 +69,21 @@
                     this.steps = []
 
                     this._currentStep = 0
+                    this.svgSizes = []
 
                     document.addEventListener(
                         'DOMContentLoaded',
                         () => {
+                            this._resize()
                             this.initial = this.outerHTML
                         },
                         0
                     )
+
+                    // add resize
+                    window.addEventListener('resize', () => {
+                        this.resize()
+                    })
                 }
 
                 set currentStep(value) {
@@ -72,16 +94,26 @@
                     return this._currentStep
                 }
 
-                addStep(stepCallback) {
-                    console.log('addStep')
-                    this.steps.push(stepCallback)
+                addStep(stepCallback, autoplay = false) {
+                    this.steps.push({ func: stepCallback, autoplay })
+                }
+
+                checkAutoplay() {
+                    if (this.currentStep < this.steps.length) {
+                        const { autoplay, func } = this.steps[this.currentStep]
+                        if (autoplay) {
+                            this.currentStep++
+                            func()
+                        }
+                    }
                 }
 
                 nextStep() {
                     if (this.currentStep < this.steps.length) {
                         // apply next
                         this.currentStep++
-                        this.steps[this.currentStep - 1]()
+                        const { func } = this.steps[this.currentStep - 1]
+                        func()
                     }
                 }
 
@@ -89,17 +121,63 @@
                     return this.currentStep < this.steps.length
                 }
 
+                resize() {
+                    if (this._resize_timeout) {
+                        clearTimeout(this._resize_timeout)
+                    }
+
+                    this._resize_timeout = setTimeout(() => {
+                        this._resize()
+                    }, 100)
+                }
+
+                _resize() {
+                    let originalHeight =
+                        ORIGINAL_HEIGHT * (1 - DEFAULT_VH_MARGIN * 2)
+                    let originalWidth = originalHeight * (4 / 3)
+
+                    let scale = 1
+
+                    if (window.innerWidth * (3 / 4) >= window.innerHeight) {
+                        const h = window.innerHeight * (1 - DEFAULT_VH_MARGIN * 2)
+                        const w = h * (4 / 3)
+                        const my = DEFAULT_VH_MARGIN * window.innerHeight
+                        const mx = (window.innerWidth - w) / 2
+
+                        this.style.margin = `${my}px ${mx}px`
+                        scale = h / ORIGINAL_HEIGHT
+                    }else{
+                        const w = window.innerWidth * (1 - DEFAULT_VH_MARGIN * 2)
+                        const h = w * (3 / 4)
+                        const mx = DEFAULT_VH_MARGIN * window.innerWidth
+                        const my = (window.innerHeight - h) / 2
+
+                        this.style.margin = `${my}px ${mx}px`
+                        scale = h / ORIGINAL_HEIGHT
+                    }
+
+                    this.style.height = `${originalHeight}px`
+                    this.style.width = `${originalWidth}px`
+                    this.style.transform = `scale(${scale})`
+
+                }
+
                 reset() {
-                    morphdom(this, this.initial)
+                    morphdom(this, this.initial, { childrenOnly: true })
                     this.currentStep = 0
+                    this.resize()
+                    this.checkAutoplay()
                 }
             }
             window.customElements.define('presentation-slide', Slide)
         </script>
-
+        <link
+            href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
+            rel="stylesheet"
+        />
         <link rel="stylesheet" href="style.css" />
     </head>
-    <body>
+    <body style="opacity: 0">
         <!-- content -->
     </body>
     <script src="index.js" type="module"></script>

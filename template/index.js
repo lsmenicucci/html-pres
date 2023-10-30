@@ -1,67 +1,67 @@
 // hot reload
-const ws = new WebSocket(`ws://${window.location.host}/ws`)
-ws.addEventListener('message', (event) => {
-    if (event.data === 'reload') {
-        // save state in local storage
-        const state = {
-            currentSlide,
+if (window.location.hostname === 'localhost') {
+    const ws = new WebSocket(`ws://${window.location.host}/ws`)
+    ws.addEventListener('message', (event) => {
+        if (event.data === 'reload') {
+            // save state in local storage
+            const state = {
+                currentSlide,
+            }
+            localStorage.setItem('state', JSON.stringify(state))
+
+            window.location.reload()
         }
-        localStorage.setItem('state', JSON.stringify(state))
+    })
 
-        window.location.reload()
-    }
-})
+    ws.addEventListener('open', () => {
+        const stateStr = localStorage.getItem('state')
+        if (stateStr) {
+            const state = JSON.parse(stateStr)
+            currentSlide = state.currentSlide
+            currentSlide = Math.min(currentSlide, slides.length - 1)
 
-//const domToSvg = await import('https://cdn.skypack.dev/dom-to-svg')
-//const pdfkit = await import('https://unpkg.com/pdfkit@0.13/js/pdfkit.standalone.js')
+            focusSlide(currentSlide)
+        }
+    })
+}
+
 const slides = [...document.querySelectorAll('presentation-slide')]
 let currentSlide = 0
-
-// slide state
 
 // load state from local storage
 const saveState = () => {
     const state = {
-        currentSlide, 
+        currentSlide,
         currentSlideStep: slides[currentSlide].currentStep,
     }
 
-    localStorage.setItem('state', JSON.stringify(state)) 
+    localStorage.setItem('state', JSON.stringify(state))
 }
-
-const stateStr = localStorage.getItem('state')
-if (stateStr) {
-    const state = JSON.parse(stateStr)
-    currentSlide = state.currentSlide 
-    currentSlide = Math.min(currentSlide, slides.length - 1)
-
-    focusSlide(currentSlide)
-}
-
 
 // presentation driver
 const nextSlide = () => {
     if (slides[currentSlide].hasNextStep()) {
         slides[currentSlide].nextStep()
-        return 
+        return
     }
 
     if (currentSlide < slides.length - 1) {
+        slides[currentSlide + 1].reset()
         focusSlide(currentSlide + 1)
     }
 }
 
 const prevSlide = () => {
     if (currentSlide > 0) {
-        focusSlide(currentSlide - 1)
         slides[currentSlide].reset()
+        focusSlide(currentSlide - 1)
     }
 }
 
 function focusSlide(index) {
     // scroll to slide
     slides[index].scrollIntoView({
-        block: 'start',
+        block: 'center',
         inline: 'nearest',
     })
 
@@ -70,6 +70,21 @@ function focusSlide(index) {
     // save state in local storage
     saveState()
 }
+
+// fix scrolling when resize
+let scrollTimeout = null
+window.addEventListener('resize', () => {
+    if (scrollTimeout) {
+        clearTimeout(scrollTimeout)
+    }
+    
+    scrollTimeout = setTimeout(() => {
+        slides[currentSlide].scrollIntoView({
+            block: 'center', 
+            inline: 'nearest', 
+        })
+    }, 501)
+})
 
 // setup arrow navigation
 document.addEventListener('keydown', (e) => {
@@ -88,16 +103,27 @@ document.addEventListener('keydown', (e) => {
     }
 })
 
+// setup touch navigation
+const BACK_REGION = 0.3
+document.addEventListener('touchstart', (e) => {
+    const touch = e.touches[0]
+    const x = touch.clientX
+
+    const width = window.innerWidth
+
+    if (x < width * BACK_REGION) {
+        prevSlide()
+    } else {
+        nextSlide()
+    }
+})
+
 // export slides as SVG
 const exportSlides = () => {
     // TODO: TBI
     return
-
-    console.log('exportSlides')
-
-    const slide = slides[currentSlide]
-    const svg = domToSvg.elementToSVG(slide)
-    const svgString = new XMLSerializer().serializeToString(svg)
-
-    console.log(pdfkit)
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.body.style.opacity = 1
+})
