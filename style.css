@@ -68,9 +68,9 @@ th {
     color: white;
 }
 
-/* Regular presentation-slide */
+/* Regular .slide */
 
-presentation-slide {
+.slide {
     background-color: #f5f5f5;
     box-sizing: border-box;
 
@@ -86,7 +86,7 @@ presentation-slide {
     touch-action: manipulation;
 }
 
-presentation-slide img {
+.slide img {
     align-self: center;
 }
 
@@ -122,9 +122,9 @@ ul.todo li.done:before {
     content: '■';
 }
 
-/* Title presentation-slide */
+/* Title .slide */
 
-presentation-slide.title {
+.slide.title {
     padding: 5%;
     display: flex;
     flex-direction: column;
@@ -132,12 +132,12 @@ presentation-slide.title {
     align-items: flex-start;
 }
 
-presentation-slide.title h1 {
+.slide.title h1 {
     font-size: 2em;
     text-align: center;
     margin: 0.5em 0;
 }
 
-presentation-slide.title .authors {
+.slide.title .authors {
     text-align: center;
 }

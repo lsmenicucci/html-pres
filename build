@@ -1,0 +1,10 @@
+#!/usr/bin/env python
+from pathlib import Path 
+import os
+
+here = Path(__file__).parent.resolve() 
+bunBuild = here / 'build.js' 
+
+cmd = f"bun run {bunBuild}" 
+os.system(cmd)
+
