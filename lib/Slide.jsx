@@ -60,7 +60,7 @@ const useResponsiveSlide = () => {
     return { width, height, scale, xmargin, ymargin }
 }
 
-export default ({ children, className, ...props }) => {
+export default ({ children, className, title, ...props }) => {
     const { width, height, scale, xmargin, ymargin } = useResponsiveSlide()
 
     return (
@@ -74,6 +74,7 @@ export default ({ children, className, ...props }) => {
             }}
             {...props}
         >
+                {title && <h2 className="-mt-8 -ml-4 pb-4">{title}</h2>}
             {children}
         </div>
     )

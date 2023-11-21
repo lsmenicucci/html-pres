@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import { build, defineConfig } from 'vite'
+import { viteSingleFile } from "vite-plugin-singlefile"
 
 let here = path.resolve(import.meta.url.replace('file://', ''))
 here = path.dirname(here)
@@ -26,8 +27,6 @@ export default defineConfig({
     define: {},
     resolve: {
         alias: {
-            ...localPackages,
-            react: localPackages['preact'] + '/compat',
             '@entry': envEntry,
             '@cwd': path.dirname(envEntry),
             '@slides': path.join(cwd, 'slides'),
@@ -49,5 +48,5 @@ export default defineConfig({
     optimizeDeps: {
         disable: true,
     },
-    plugins: [require('tailwindcss'), require('autoprefixer')],
+    plugins: [require('tailwindcss'), require('autoprefixer'), viteSingleFile()],
 })
