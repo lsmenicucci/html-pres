@@ -1,14 +1,35 @@
-import { useState, useEffect } from 'preact/hooks'
+import { useState, useEffect, useContext } from 'preact/hooks'
+import { createContext } from 'preact'
 import classNames from 'classnames'
 
 const ORIGINAL_WIDTH = 1920
 const ORIGINAL_HEIGHT = 900
 const DEFAULT_VH_MARGIN = 0.025
 
+// load from local storage
+const loadSlideDims = () => {
+    const slideDims = JSON.parse(localStorage.getItem('slideDims'))
+    if (slideDims) {
+        return slideDims
+    }
+
+    return {
+        scale: 1,
+        xmargin: 0,
+        ymargin: 0,
+    }
+}
+
+// save to local storage 
+const saveSlideDims = (slideDims) => {
+    localStorage.setItem('slideDims', JSON.stringify(slideDims))
+}
+
+
 const useResponsiveSlide = () => {
-    const [scale, setScale] = useState(1)
-    const [xmargin, setxMargin] = useState(0)
-    const [ymargin, setyMargin] = useState(0)
+    const [scale, setScale] = useState(loadSlideDims().scale)
+    const [xmargin, setxMargin] = useState(loadSlideDims().xmargin)
+    const [ymargin, setyMargin] = useState(loadSlideDims().ymargin)
 
     const height = ORIGINAL_HEIGHT * (1 - DEFAULT_VH_MARGIN * 2)
     const width = height * (4 / 3)
@@ -23,7 +44,6 @@ const useResponsiveSlide = () => {
         let vh = Math.min(
             document.documentElement.clientHeight,
             screen.availHeight
-
         )
 
         let w = 0
@@ -52,6 +72,10 @@ const useResponsiveSlide = () => {
     }
 
     useEffect(() => {
+        saveSlideDims({ scale, xmargin, ymargin })
+    }, [scale, xmargin, ymargin])
+
+    useEffect(() => {
         handleResize()
         window.addEventListener('resize', handleResize)
         return () => window.removeEventListener('resize', handleResize)
@@ -63,18 +87,22 @@ const useResponsiveSlide = () => {
 export default ({ children, className, title, ...props }) => {
     const { width, height, scale, xmargin, ymargin } = useResponsiveSlide()
 
+    useEffect(() => {
+        console.log('rendering slide')
+    }, [children])
+
     return (
         <div
             className={classNames('slide', className)}
             style={{
-                width, 
+                width,
                 height,
                 transform: `scale(${scale})`,
                 margin: `${ymargin}px ${xmargin}px`,
             }}
             {...props}
         >
-                {title && <h2 className="-mt-8 -ml-4 pb-4">{title}</h2>}
+            {title && <h2 className="-mt-8 -ml-4 pb-4">{title}</h2>}
             {children}
         </div>
     )

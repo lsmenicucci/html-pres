@@ -1,5 +1,5 @@
 import { render } from 'preact'
-import { useState, useEffect, useContext } from 'preact/hooks'
+import { useState, useEffect, useContext, useMemo } from 'preact/hooks'
 import slides from '@entry'
 import interactionCtx from './lib/interaction'
 
@@ -31,7 +31,13 @@ const App = () => {
     useDevPersist('slideIdx', slideIdx, setSlideIdx)
 
     useEffect(() => {
+        interaction.slideIdx = slideIdx 
+        interaction.isDone = true
+    }, [slideIdx])
+
+    useEffect(() => {
         const next = () => {
+            console.log('next', interaction.isDone)
             if (interaction.isDone && slideIdx < slides.length - 1) {
                 setSlideIdx(slideIdx + 1)
             }
@@ -52,7 +58,12 @@ const App = () => {
         return () => window.removeEventListener('keydown', handler)
     }, [slideIdx])
 
-    return slides[slideIdx]()
+    const Slide = useMemo(() => {
+        const Slide = slides[slideIdx]
+        return () => <Slide />
+    })
+
+    return <Slide />
 }
 
 console.log('rendering')
